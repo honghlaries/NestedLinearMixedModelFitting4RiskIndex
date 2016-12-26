@@ -1,7 +1,12 @@
-Provided as example code for manuscript entitled "Risk assessment for Artificial Topography on Element Heterogeneity: case study at Jiangsu, China"
+##Brief Introduction
+These codes were erovided as examples for manuscript entitled "Risk assessment for Artificial Topography on Element Heterogeneity: case study at Jiangsu, China"
 
-#Brief Introduction
+##Mian Features
 
-#Data cleaning 
+##Package Required
 
-#Fitting Rusults and Plots 
+##Data Cleaning 
+
+##Rusults and Plots for Model Fitting
+
+##Main Functions
