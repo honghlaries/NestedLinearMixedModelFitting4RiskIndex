@@ -45,7 +45,7 @@ mainCal <- function(dat,indx) { ## main calculationg output
 
 lmeFECal <- function(dat, indx, tag) { ## Fixed effect
   dat <- dat %>% filter(elem == tag)
-  mod.lme4 <- lmer(value ~ group + (1|month) + (1|site), data = dat)
+  mod.lme4 <- lmer(value ~ group * month + (1|site), data = dat)
   #shinyMer(mod.lme4, simData = dat)
   fe <- FEsim(mod.lme4)
   ggsave(plot = plotFEsim(fe), 
@@ -56,7 +56,7 @@ lmeFECal <- function(dat, indx, tag) { ## Fixed effect
 
 lmeRECal <- function(dat, indx, tag) { ## Random effect
   dat <- dat %>% filter(elem == tag)
-  mod.lme4 <- lmer(value ~ group + (1|month) + (1|site), data = dat)
+  mod.lme4 <- lmer(value ~ group * month + (1|site), data = dat)
   re <- REsim(mod.lme4)
   ggsave(plot = plotREsim(re), 
          paste("Plot/",indx,"/",tag,"_Raneff.png",sep=""),
@@ -118,11 +118,11 @@ plotREsim2 <- function (data, level = 0.95, stat = "median", sd = TRUE, sigmaSca
       geom_pointrange(data = subset(data, sig == TRUE), 
                       alpha = 0.25)
   }
-  p + facet_wrap(~tag + groupFctr, ncol = 6, scales = "free")
+  p + facet_wrap(~tag + groupFctr, ncol = ncol, scales = "free")
 }
 
 plotFEsim2 <- function (data, level = 0.95, stat = "median", sd = TRUE, intercept = FALSE, 
-                        sigmaScale = NULL, oddsRatio = FALSE, taglv = NA, gcol, ncol) {
+                        sigmaScale = NULL, oddsRatio = FALSE, taglv = NA, glv, gcode, ncol) {
   ## plotFEsim2, modified from merTools::plotFEsim
   if (!missing(sigmaScale)) {
     data[, "sd"] <- data[, "sd"]/sigmaScale
@@ -152,20 +152,24 @@ plotFEsim2 <- function (data, level = 0.95, stat = "median", sd = TRUE, intercep
     data <- tmp
     data$tag <- factor(data$tag, levels = taglv)
   }
+  gcol <- rep("black",length(data$term)/length(taglv))
+  for (m in 1: length(glv)) {
+    gcol[levels(data$term) == glv[m]] <- gcode[m]
+  }
   p <- ggplot(aes_string(x = xvar, y = stat, ymax = "ymax", ymin = "ymin"), data = data) + 
     geom_hline(yintercept = hlineInt, color = I("red")) +
     geom_point(aes(col = term), size = I(3)) + 
     labs(x = "Group", y = "Fixed Effect") + 
-    scale_color_manual("Group", values = gcol) + 
+    scale_color_manual("Group", breaks = levels(data$term), values = gcol) + 
     facet_wrap(~ tag, ncol = ncol) +
-    coord_flip() + theme_bw() 
+    coord_flip() + theme_bw() + theme(legend.position = "none")
   if (sd) {
     p <- p + geom_errorbar(width = 0.2)
   }
   p
 }
 
-mainPlot <- function(dat,indx,ncolfe,ncolre, taglv = NA) { ## main plot output
+mainPlot <- function(dat,indx,ncolfe,ncolre, glv, gcode, taglv = NA) { ## main plot output
   for(i in 1:length(indx)) {
     indx1 <- indx[i]; dat1 <- dat; fe <- NULL; re <- NULL;
     dat1 <- dat1 %>%
@@ -180,12 +184,12 @@ mainPlot <- function(dat,indx,ncolfe,ncolre, taglv = NA) { ## main plot output
       re <- rbind(re,cbind(lmeRECal(dat = dat1, indx = indx1, tag = elemcol[j]),tag = elemcol[j]))
     }
     fe <- fe %>% filter(term != "(Intercept)") %>% mutate(term = gsub("group","",term))
-    p.fe <- plotFEsim2(data = fe, ncol = ncolfe[i], gcol = c("#013ADF","grey50","#31B404"), taglv = taglv)
-    ggsave(filename = paste("Plot/",indx1,"/",indx1,"_FixEff.png", sep = ""),
+    p.fe <- plotFEsim2(data = fe, ncol = ncolfe[i], taglv = taglv, glv = glv, gcode = gcode)
+    ggsave(filename = paste("Plot/",indx1,"_FixEff.png", sep = ""),
            plot = p.fe, dpi = 600, width = 9, height = 6)
     p.re <- plotREsim2(data = re, ncol = ncolre[i], taglv = taglv)
-    ggsave(filename = paste("Plot/",indx1,"/",indx1,"_RanEff.png", sep = ""),
-           plot = p.re, dpi = 600, width = 12, height = 12)
+    ggsave(filename = paste("Plot/",indx1,"_RanEff.png", sep = ""),
+           plot = p.re, dpi = 600, width = 12, height = 6)
   }
   NULL
 }
@@ -193,7 +197,9 @@ mainPlot <- function(dat,indx,ncolfe,ncolre, taglv = NA) { ## main plot output
 ## example ----
 mainCal(dat = datareadln()[-84:-85,], indx = c("Igeo","EnrichmentFator")) %>% 
   write.csv("log/ModelFiting.csv")
-mainPlot(dat = datareadln()[-84:-85,], indx = "Igeo", ncolfe = 5, ncolre = 6,
-         taglv = c("N","C","orgC","S","P","Al","Fe","Mn","Cu","Zn","Ni","Cr","Pb","As","Cd"))
+mainPlot(dat = datareadln()[-84:-85,], indx = "Igeo", ncolfe = 5, ncolre = 5,
+         taglv = c("N","C","orgC","S","P","Al","Fe","Mn","Cu","Zn","Ni","Cr","Pb","As","Cd"),
+         glv = c("EA","NV","WE"), gcode = c("#31B404","grey50","#013ADF"))
 mainPlot(dat = datareadln()[-84:-85,], indx = "EnrichmentFator",ncolfe = 4,ncolre = 4, 
-         taglv = c("N","C","S","Fe","Mn","Cu","Zn","Ni","Cr","Pb","As","Cd"))
+         taglv = c("N","C","S","Fe","Mn","Cu","Zn","Ni","Cr","Pb","As","Cd"),
+         glv = c("EA","NV","WE"), gcode = c("#31B404","grey50","#013ADF"))
