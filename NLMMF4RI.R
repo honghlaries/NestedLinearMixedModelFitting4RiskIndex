@@ -153,14 +153,17 @@ plotFEsim2 <- function (data, level = 0.95, stat = "median", sd = TRUE, intercep
     data$tag <- factor(data$tag, levels = taglv)
   }
   gcol <- rep("black",length(data$term)/length(taglv))
+  gsize <- rep(1,length(data$term)/length(taglv))
   for (m in 1: length(glv)) {
     gcol[levels(data$term) == glv[m]] <- gcode[m]
+    gsize[levels(data$term) == glv[m]] <- 3
   }
   p <- ggplot(aes_string(x = xvar, y = stat, ymax = "ymax", ymin = "ymin"), data = data) + 
     geom_hline(yintercept = hlineInt, color = I("red")) +
-    geom_point(aes(col = term), size = I(3)) + 
+    geom_point(aes(col = term, size = term)) + 
     labs(x = "Group", y = "Fixed Effect") + 
     scale_color_manual("Group", breaks = levels(data$term), values = gcol) + 
+    scale_size_manual("Group", breaks = levels(data$term), values = gsize) + 
     facet_wrap(~ tag, ncol = ncol) +
     coord_flip() + theme_bw() + theme(legend.position = "none")
   if (sd) {
@@ -186,7 +189,7 @@ mainPlot <- function(dat,indx,ncolfe,ncolre, glv, gcode, taglv = NA) { ## main p
     fe <- fe %>% filter(term != "(Intercept)") %>% mutate(term = gsub("group","",term))
     p.fe <- plotFEsim2(data = fe, ncol = ncolfe[i], taglv = taglv, glv = glv, gcode = gcode)
     ggsave(filename = paste("Plot/",indx1,"_FixEff.png", sep = ""),
-           plot = p.fe, dpi = 600, width = 9, height = 6)
+           plot = p.fe, dpi = 600, width = 8, height = 6)
     p.re <- plotREsim2(data = re, ncol = ncolre[i], taglv = taglv)
     ggsave(filename = paste("Plot/",indx1,"_RanEff.png", sep = ""),
            plot = p.re, dpi = 600, width = 12, height = 6)
