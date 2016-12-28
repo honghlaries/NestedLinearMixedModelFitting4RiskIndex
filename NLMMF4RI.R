@@ -43,24 +43,28 @@ mainCal <- function(dat,indx) { ## main calculationg output
   result
 }
 
-lmeFECal <- function(dat, indx, tag) { ## Fixed effect
+lmeFECal <- function(dat, indx, tag, archiplot) { ## Fixed effect
   dat <- dat %>% filter(elem == tag)
   mod.lme4 <- lmer(value ~ group * month + (1|site), data = dat)
   #shinyMer(mod.lme4, simData = dat)
   fe <- FEsim(mod.lme4)
-  ggsave(plot = plotFEsim(fe), 
-         paste("Plot/",indx,"/",tag,"_Fixeff.png",sep=""),
-         width = 6, height = 4)
+  if (archiplot) {
+    ggsave(plot = plotFEsim(fe), 
+           paste("Plot/",indx,"/",tag,"_Fixeff.png",sep=""),
+           width = 6, height = 4)
+  }
   fe
 }
 
-lmeRECal <- function(dat, indx, tag) { ## Random effect
+lmeRECal <- function(dat, indx, tag, archiplot) { ## Random effect
   dat <- dat %>% filter(elem == tag)
   mod.lme4 <- lmer(value ~ group * month + (1|site), data = dat)
   re <- REsim(mod.lme4)
-  ggsave(plot = plotREsim(re), 
-         paste("Plot/",indx,"/",tag,"_Raneff.png",sep=""),
-         width = 6, height = 4)
+  if(archiplot) {
+    ggsave(plot = plotREsim(re), 
+           paste("Plot/",indx,"/",tag,"_Raneff.png",sep=""),
+           width = 6, height = 4)
+  }
   re
 }
 
@@ -172,7 +176,7 @@ plotFEsim2 <- function (data, level = 0.95, stat = "median", sd = TRUE, intercep
   p
 }
 
-mainPlot <- function(dat,indx,ncolfe,ncolre, glv, gcode, taglv = NA) { ## main plot output
+mainPlot <- function(dat,indx,ncolfe,ncolre, glv, gcode, taglv = NA, archiplot = FALSE, ranecal = TRUE, suffix ="") { ## main plot output
   for(i in 1:length(indx)) {
     indx1 <- indx[i]; dat1 <- dat; fe <- NULL; re <- NULL;
     dat1 <- dat1 %>%
@@ -183,16 +187,20 @@ mainPlot <- function(dat,indx,ncolfe,ncolre, glv, gcode, taglv = NA) { ## main p
       dplyr::rename(site = SiteID, month = SplMonth)
     elemcol <- unique(dat1$elem)
     for(j in 1:length(elemcol)) {
-      fe <- rbind(fe,cbind(lmeFECal(dat = dat1, indx = indx1, tag = elemcol[j]),tag = elemcol[j]))
-      re <- rbind(re,cbind(lmeRECal(dat = dat1, indx = indx1, tag = elemcol[j]),tag = elemcol[j]))
+      fe <- rbind(fe,cbind(lmeFECal(dat = dat1, indx = indx1, tag = elemcol[j], archiplot = archiplot),tag = elemcol[j]))
     }
-    fe <- fe %>% filter(term != "(Intercept)") %>% mutate(term = gsub("group","",term))
+    fe <- fe %>% filter(term != "(Intercept)") %>% mutate(term = gsub("group","",term)) %>% mutate(term = gsub("month","",term))
     p.fe <- plotFEsim2(data = fe, ncol = ncolfe[i], taglv = taglv, glv = glv, gcode = gcode)
-    ggsave(filename = paste("Plot/",indx1,"_FixEff.png", sep = ""),
+    ggsave(filename = paste("Plot/",indx1,"_FixEff",suffix,".png", sep = ""),
            plot = p.fe, dpi = 600, width = 8, height = 6)
-    p.re <- plotREsim2(data = re, ncol = ncolre[i], taglv = taglv)
-    ggsave(filename = paste("Plot/",indx1,"_RanEff.png", sep = ""),
-           plot = p.re, dpi = 600, width = 12, height = 6)
+    if (ranecal) {
+      for(j in 1:length(elemcol)) {
+        re <- rbind(re,cbind(lmeRECal(dat = dat1, indx = indx1, tag = elemcol[j], archiplot = archiplot),tag = elemcol[j]))
+      }
+      p.re <- plotREsim2(data = re, ncol = ncolre[i], taglv = taglv)
+      ggsave(filename = paste("Plot/",indx1,"_RanEff.png", sep = ""),
+             plot = p.re, dpi = 600, width = 12, height = 6)
+    }
   }
   NULL
 }
@@ -200,9 +208,15 @@ mainPlot <- function(dat,indx,ncolfe,ncolre, glv, gcode, taglv = NA) { ## main p
 ## example ----
 mainCal(dat = datareadln()[-84:-85,], indx = c("Igeo","EnrichmentFator")) %>% 
   write.csv("log/ModelFiting.csv")
-mainPlot(dat = datareadln()[-84:-85,], indx = "Igeo", ncolfe = 5, ncolre = 5,
+mainPlot(dat = datareadln()[-84:-85,], indx = "Igeo", ncolfe = 5, ncolre = 5, archiplot = T, ranecal = T, suffix = "_G",
          taglv = c("N","C","orgC","S","P","Al","Fe","Mn","Cu","Zn","Ni","Cr","Pb","As","Cd"),
          glv = c("EA","NV","WE"), gcode = c("#31B404","grey50","#013ADF"))
-mainPlot(dat = datareadln()[-84:-85,], indx = "EnrichmentFator",ncolfe = 4,ncolre = 4, 
+mainPlot(dat = datareadln()[-84:-85,], indx = "EnrichmentFator",ncolfe = 4,ncolre = 4, archiplot = T, ranecal = T,  suffix = "_G",
          taglv = c("N","C","S","Fe","Mn","Cu","Zn","Ni","Cr","Pb","As","Cd"),
          glv = c("EA","NV","WE"), gcode = c("#31B404","grey50","#013ADF"))
+mainPlot(dat = datareadln()[-84:-85,], indx = "Igeo", ncolfe = 5, ncolre = 5, archiplot = F, ranecal = F,  suffix = "_M",
+         taglv = c("N","C","orgC","S","P","Al","Fe","Mn","Cu","Zn","Ni","Cr","Pb","As","Cd"),
+         glv = c("Nov","Jul"), gcode = c("brown","green"))
+mainPlot(dat = datareadln()[-84:-85,], indx = "EnrichmentFator",ncolfe = 4,ncolre = 4, archiplot = F, ranecal = F,  suffix = "_M",
+         taglv = c("N","C","S","Fe","Mn","Cu","Zn","Ni","Cr","Pb","As","Cd"),
+         glv = c("Nov","Jul"), gcode = c("brown","green"))
