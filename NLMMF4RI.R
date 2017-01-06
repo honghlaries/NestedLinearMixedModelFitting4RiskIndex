@@ -15,13 +15,13 @@ datareadln <- function() { ## data readln ----
     inner_join(read.csv("./Data/meta_SedimentSampleList.csv"), by = c("SplNo" = "SplNo")) %>%
     right_join(read.csv("./Data/meta_Quadrat.csv"), by = c("QudNo" = "QudNo")) %>%
     inner_join(read.csv("./Data/meta_SiteGroup.csv"), by = c("SiteID" = "SiteID"))%>%
-    mutate(siteinmonth = paste(SplMonth,SiteID, sep = ""))
+    mutate(siteXmonth = paste(SplMonth,SiteID, sep = ""))
 }
 
 lmefit <- function(dat, indx, tag) { ## Linear mix model fiting ----
   dat <- dat %>% filter(elem == tag)
-  if (sd(dat$value)==0) return(NULL)
-  mod.nlme <- lme(value ~ group + month, random = ~ 1|siteinmonth, data = dat) 
+  if (sd(dat$value)==0) return(NA)
+  mod.nlme <- lme(value ~ group + month, random = ~ 1|siteXmonth, data = dat) 
   est <-c("intercept","group","month"); element <- tag
   cbind(anova(mod.nlme), element, est, indx)
 }
@@ -31,7 +31,7 @@ mainCal <- function(dat,indx) { ## main calculationg output
   for(i in 1:length(indx)) {
     indx1 <- indx[i]; dat1 <- dat
     dat1 <- dat1 %>%
-      dplyr::select(SiteID,SplMonth,group,siteinmonth,contains(indx1)) %>%
+      dplyr::select(SiteID,SplMonth,group,siteXmonth,contains(indx1)) %>%
       gather(elem, value, contains(indx1)) %>%
       mutate(elem = gsub(pattern = paste("_",indx1,sep=""),
                          replacement = "", x=elem)) %>%
@@ -46,7 +46,7 @@ mainCal <- function(dat,indx) { ## main calculationg output
 
 lmeFECal <- function(dat, indx, tag, archiplot) { ## Fixed effect
   dat <- dat %>% filter(elem == tag)
-  mod.lme4 <- lmer(value ~ group + month + (1|siteinmonth), data = dat)
+  mod.lme4 <- lmer(value ~ group + month + (1|siteXmonth), data = dat)
   #shinyMer(mod.lme4, simData = dat)
   fe <- FEsim(mod.lme4)
   if (archiplot) {
@@ -59,7 +59,7 @@ lmeFECal <- function(dat, indx, tag, archiplot) { ## Fixed effect
 
 lmeRECal <- function(dat, indx, tag, archiplot) { ## Random effect
   dat <- dat %>% filter(elem == tag)
-  mod.lme4 <- lmer(value ~ group + month + (1|siteinmonth), data = dat)
+  mod.lme4 <- lmer(value ~ group + month + (1|siteXmonth), data = dat)
   re <- REsim(mod.lme4)
   if(archiplot) {
     ggsave(plot = plotREsim(re), 
@@ -181,7 +181,7 @@ mainPlot <- function(dat,indx,ncolfe,ncolre, glv, gcode, taglv = NA, archiplot =
   for(i in 1:length(indx)) {
     indx1 <- indx[i]; dat1 <- dat; fe <- NULL; re <- NULL;
     dat1 <- dat1 %>%
-      dplyr::select(SiteID,SplMonth,group,siteinmonth,contains(indx1)) %>%
+      dplyr::select(SiteID,SplMonth,group,siteXmonth,contains(indx1)) %>%
       gather(elem, value, contains(indx1)) %>%
       mutate(elem = gsub(pattern = paste("_",indx1,sep=""),
                          replacement = "", x=elem)) %>%
