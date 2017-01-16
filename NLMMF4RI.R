@@ -8,6 +8,9 @@ library(ggplot2)
 library(lme4)
 library(nlme)
 library(merTools)
+library(lsmeans)
+library(lmerTest)
+library(multcompView)
 
 # functions ----
 datareadln <- function() { ## data readln ----
@@ -15,14 +18,13 @@ datareadln <- function() { ## data readln ----
     inner_join(read.csv("./Data/meta_SedimentSampleList.csv"), by = c("SplNo" = "SplNo")) %>%
     right_join(read.csv("./Data/meta_Quadrat.csv"), by = c("QudNo" = "QudNo")) %>%
     inner_join(read.csv("./Data/meta_SiteGroup.csv"), by = c("SiteID" = "SiteID"))
-    #mutate(siteXmonth = paste(SplMonth,SiteID, sep = ""))
 }
 
 lmeanova <- function(dat, indx, tag) { ## Linear mix model fiting ----
   dat <- dat %>% filter(elem == tag)
   if (sd(dat$value)==0) return(NA)
-  mod.nlme <- lme(value ~ group * month, random = ~ 1|site, data = dat) 
-  est <-c("intercept","group","month","group:month"); element <- tag
+  mod.nlme <- lme(value ~ group, random = ~ 1|month/site, data = dat) 
+  est <-c("intercept","group"); element <- tag
   cbind(anova(mod.nlme), element, est, indx)
 }
 
@@ -46,7 +48,7 @@ anovaCal <- function(dat,indx) { ## main calculationg output
 
 lmeFECal <- function(dat, indx, tag, archiplot) { ## Fixed effect
   dat <- dat %>% filter(elem == tag)
-  mod.lme4 <- lmer(value ~ group * month + (1|site), data = dat)
+  mod.lme4 <- lmer(value ~ group + (1|month/site), data = dat)
   #shinyMer(mod.lme4, simData = dat) 
   fe <- FEsim(mod.lme4)
   if (archiplot) {
@@ -59,7 +61,7 @@ lmeFECal <- function(dat, indx, tag, archiplot) { ## Fixed effect
 
 lmeRECal <- function(dat, indx, tag, archiplot) { ## Random effect
   dat <- dat %>% filter(elem == tag)
-  mod.lme4 <- lmer(value ~ group * month + (1|site), data = dat)
+  mod.lme4 <- lmer(value ~ group * month + (1|site/group), data = dat)
   re <- REsim(mod.lme4)
   if(archiplot) {
     ggsave(plot = plotREsim(re), 
@@ -215,6 +217,7 @@ mainPlot <- function(dat,indx,ncolfe,ncolre, glv, gcode, taglv = NA, archiplot =
 }
 
 ## example ----
+datareadln() %>% write.csv("log/data.csv")
 anovaCal(dat = datareadln()[-84:-85,], indx = c("Igeo","EnrichmentFator")) %>% filter(!is.na(numDF)) %>%
   write.csv("log/anova.csv")
 mainPlot(dat = datareadln()[-84:-85,], indx = "Igeo", ncolfe = 5, ncolre = 5, archiplot = F, suffix = "_G",
@@ -229,3 +232,23 @@ mainPlot(dat = datareadln()[-84:-85,], indx = "EnrichmentFator",ncolfe = 4,ncolr
 #mainPlot(dat = datareadln()[-84:-85,], indx = "EnrichmentFator",ncolfe = 4,ncolre = 4, archiplot = F, ranecal = F,  suffix = "_M",
 #         taglv = c("N","C","S","Fe","Mn","Cu","Zn","Ni","Cr","Pb","As","Cd"),
 #         glv = c("Nov","Jul"), gcode = c("brown","green"))
+
+cld(lsmeans::lsmeans(lmer(value ~ group + (1|group:site) + (1|site:month), 
+                          data = dat1 %>% filter(elem == "N")),
+                     ~ group ))
+
+Anova(lmer(value ~ group + month + (1|group:site) + (1|site:month), 
+           data = dat1 %>% filter(elem == "N") %>% 
+             filter(group == "CL" | group == "EA") %>%
+             filter(month != "Apr")))
+
+mod1 <- lmer(value ~ group + month + (1|group:site) + (1|site:month), 
+             data = dat1 %>% filter(elem == "N"))
+mod2 <- lmer(value ~ group  + (1|group:site) + (1|site:month), 
+             data = dat1 %>% filter(elem == "N"))
+
+with(data = dat1 %>% filter(elem == "N") %>% filter(group == "CL" | group == "EA" | group == "WE"), 
+     anova(lmer(value ~ group  + (1|group:site) + (1|site:month)),
+           lmer(value ~ group + month + (1|group:site) + (1|site:month)),
+           lmer(value ~ group * month + (1|group:site) + (1|site:month))))
+
