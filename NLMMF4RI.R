@@ -1,5 +1,5 @@
 # clean ----
-rm(list = ls())
+rm(list = ls()) test
 
 # package loading ----
 library(dplyr)
