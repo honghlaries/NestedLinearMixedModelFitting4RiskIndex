@@ -325,11 +325,12 @@ ggsave(plot = ggplot(data = read.csv("./Data/Result_Sediment.csv") %>%
          geom_abline(slope = 1, intercept = 0, col = I("black"), size = I(0.75)) +
          geom_vline(xintercept = c(0.7,1,2,3), col = I("black"), size = I(0.5), linetype = I(2)) +
          geom_hline(yintercept = c(0.7,1,2,3), col = I("black"), size = I(0.5), linetype = I(2)) +
-         geom_point(aes(x = NCPI_t, y = NCPI_e, col = group), size = 1.5) + 
+         geom_point(aes(x = NCPI_t, y = NCPI_e, col = group, shape = SplMonth), size = 1.5) + 
          scale_x_continuous("tNPI", limits = c(0.7, 2.5), breaks = c(0.7,1,2,3)) + 
          scale_y_continuous("eNPI", limits = c(0.7, 2.5), breaks = c(0.7,1,2,3)) +
          scale_color_manual("Location", breaks = c("CL","EA","NV","WE"), 
                             values = c("#B45F04","#31B404","grey50","#013ADF")) +
+         scale_shape("Month") +
          theme_xy,
        "ncpi/plot/NpiRelation.png",
        width = 5, height = 4, dpi = 600)
