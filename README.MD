@@ -1,7 +1,7 @@
 ##Brief Introduction
 These codes were erovided as examples for manuscript entitled "Risk assessment for Artificial Topography on Element Heterogeneity: case study at Jiangsu, China"
 
-##Mian Features
+##Main Features
 
 ##Package Required
 
