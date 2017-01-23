@@ -289,7 +289,7 @@ multiElementMod <- function(dat, fact, SplMonthlv, grouplv, glv, gcode,
 meanseCal(datareadln())
 
 ## LMM fiting and ploting ----
-multiElementMod(dat = datareadln(),
+multiElementMod(dat = datareadln() %>% filter(elem == "Al") %>% filter(elem == "orgC"),
                 fact = c("group + (1|SiteID)",
                          "SplMonth + (1|SiteID)",
                          "group + (1|SiteID:SplMonth)",
@@ -310,7 +310,7 @@ ggsave(plot = plotFEsim2facet(read.csv("igeo/log/FixedEff.csv") %>%
                                 filter(term != "(Intercept)") %>% 
                                 mutate(term = gsub("group","",term)) %>% 
                                 mutate(term = gsub("SplMonth","",term)),
-                              glv = c("EA","WE", "NV"), gcode = c("#31B404","#013ADF","grey50"), ncol = 5,
+                              glv = c("EA","WE", "NV"), gcode = c("#31B404","#013ADF","grey50"), ncol = 4,
                               theme = theme_bw() + theme(legend.position = "none",
                                                          axis.text = element_text(size= 4,angle = 30),
                                                          axis.title = element_text(size= 6),
