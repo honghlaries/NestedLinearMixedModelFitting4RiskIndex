@@ -1,6 +1,12 @@
 ## clean ----
 rm(list = ls())
 library(dplyr);library(tidyr)
+folderCreating <- function(dirs) {
+  for(i in 1:length(dirs)) {
+    if(!file.exists(dirs[i])) dir.create(dirs[i])
+  }
+}
+folderCreating(dirs = c("ncpi","ncpi/log","ncpi/plot","ncpi/plot/Raneff","ncpi/plot/Fixeff","ncpi/plot/diag","ncpi/plot/den"))
 
 ## Functions ----
 datareadln <- function() { ## data readln ----
@@ -235,32 +241,32 @@ multiElementMod <- function(dat, fact, SplMonthlv, grouplv, glv, gcode,
                                mutate(term = gsub("group","",term)) %>% 
                                mutate(term = gsub("SplMonth","",term)),
                              glv = glv, gcode = gcode, theme = theme_HL), 
-           paste("ef/plot/",tag[i],"_Fixeff.png",sep=""),
+           paste("ef/plot/Fixeff/",tag[i],"_Fixeff.png",sep=""),
            width = 6, height = 4)
     #re
     re <- REsim(mod)
     re.g <- rbind(re.g, cbind(tag = tag[i],re))
     ggsave(plot = merTools::plotREsim(re), 
-           paste("ef/plot/",tag[i],"_Raneff.png",sep=""),
+           paste("ef/plot/Raneff/",tag[i],"_Raneff.png",sep=""),
            width = 6, height = 4)
     #resid
-    png(paste("ncpi/plot/",tag[i],"_diag_resid.png",sep=""), 
+    png(paste("ncpi/plot/diag/",tag[i],"_resid.png",sep=""), 
         width = 30, height = 20, units = "cm", res = 600)
     print(plot(mod, type = c("p", "smooth")))
     dev.off()
-    png(paste("ncpi/plot/",tag[i],"_diag_residQQ.png",sep=""), 
+    png(paste("ncpi/plot/diag/",tag[i],"_residQQ.png",sep=""), 
         width = 30, height = 20, units = "cm", res = 600)
     print(qqmath(mod, id = 0.05))
     dev.off()
-    #png(paste("ncpi/plot/",tag[i],"_diag_zeta.png",sep=""), 
+    #png(paste("ncpi/plot/diag/",tag[i],"_zeta.png",sep=""), 
     #    width = 30, height = 20, units = "cm", res = 600)
     #something using xyplot
     #dev.off()
-    #png(paste("ncpi/plot/",tag[i],"_diag_dens.png",sep=""), 
+    #png(paste("ncpi/plot/diag/",tag[i],"_dens.png",sep=""), 
     #    width = 30, height = 20, units = "cm", res = 600)
     #something using densityplot
     #dev.off()
-    #png(paste("ncpi/plot/",tag[i],"_diag_pair.png",sep=""), 
+    #png(paste("ncpi/plot/diag/",tag[i],"_pair.png",sep=""), 
     #    width = 30, height = 20, units = "cm", res = 600)
     #something using splom
     #dev.off()
@@ -280,6 +286,22 @@ multiElementMod <- function(dat, fact, SplMonthlv, grouplv, glv, gcode,
     write.csv(x = resid.g, file = paste("ncpi/log/ShapiroResid",suffix,".csv",sep = ""), row.names = F)
   }
   "DONE!"
+}
+
+denPlot <- function(dat,tag) {
+  for(i in 1:length(tag)) {
+    ggsave(plot = ggplot(data = dat %>% dplyr::filter(elem == tag[i])) + 
+             geom_density(aes(x = resp, fill = group, na.rm = FALSE, stat = "density")) +
+             geom_vline(xintercept = c(0.7,1,2), linetype = I(2), size = I(0.5), col = I("black")) +
+             facet_grid(group~., scales = "free_y") +
+             scale_x_continuous("Enricmment Factor", limits = c(0,2.5)) +
+             scale_fill_manual("Location", breaks = c("CL","EA","NV","WE"), 
+                               values = c("#B45F04","#31B404","grey50","#013ADF")) +
+             theme_bw() + theme(legend.position = "right"),
+           filename = paste("ef/plot/den/",tag[i],".png"),
+           width = 6, height = 4, dpi = 600)
+    
+  }
 }
 
 ## Basic Stat information ----
@@ -335,3 +357,5 @@ ggsave(plot = ggplot(data = read.csv("./Data/Result_Sediment.csv") %>%
        "ncpi/plot/NpiRelation.png",
        width = 5, height = 4, dpi = 600)
 
+## density ploting ----
+denPlot(dat = datareadln(), tag = c("NCPI_t","NCPI_e"))

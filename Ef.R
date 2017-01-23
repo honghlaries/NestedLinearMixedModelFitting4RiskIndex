@@ -253,11 +253,11 @@ multiElementMod <- function(dat, fact, SplMonthlv, grouplv, glv, gcode,
            paste("ef/plot/Raneff/",tag[i],".png",sep=""),
            width = 6, height = 4)
     #resid
-    png(paste("ef/plot/diag/",tag[i],"resid.png",sep=""), 
+    png(paste("ef/plot/diag/",tag[i],"_resid.png",sep=""), 
         width = 30, height = 20, units = "cm", res = 600)
     print(plot(mod, type = c("p", "smooth")))
     dev.off()
-    png(paste("ef/plot/diag/",tag[i],"residQQ.png",sep=""), 
+    png(paste("ef/plot/diag/",tag[i],"_residQQ.png",sep=""), 
         width = 30, height = 20, units = "cm", res = 600)
     print(qqmath(mod, id = 0.05))
     dev.off()
@@ -342,9 +342,9 @@ ggsave(plot = plotFEsim2facet(read.csv("ef/log/FixedEff.csv") %>%
        width = 6, height = 4, dpi = 600)
 
 ## density ploting ----
-denPlot(dat = datareadln(), tag = c("N","C","S","N",
-                                    "N","N","N","N",
-                                    "N","N","N","N"))
+denPlot(dat = datareadln(), tag = c("N","C","S","P",
+                                    "As","Cr","Cd","Cu","Zn",
+                                    "Mn","Fe","Ni","Pb"))
 
   
   
