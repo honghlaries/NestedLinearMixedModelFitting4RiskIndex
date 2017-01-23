@@ -9,6 +9,7 @@ folderCreating <- function(dirs) {
 folderCreating(dirs = c("igeo","igeo/log","igeo/plot","igeo/plot/Raneff","igeo/plot/Fixeff","igeo/plot/diag","igeo/plot/den"))
 
 ## Functions ----
+
 datareadln <- function() { ## data readln ----
     read.csv("./Data/Result_Sediment.csv") %>%
     dplyr::inner_join(read.csv("./Data/meta_SedimentSampleList.csv"), by = c("SplNo" = "SplNo")) %>%
@@ -297,11 +298,11 @@ denPlot <- function(dat,tag) {
              geom_density(aes(x = resp, fill = group, na.rm = FALSE, stat = "density")) +
              geom_vline(xintercept = 0:2, linetype = I(2), size = I(0.5), col = I("black")) +
              facet_grid(group~., scales = "free_y") +
-             scale_x_continuous("Enricmment Factor", limits = c(0,2.5)) +
+             scale_x_continuous("Enricmment Factor", limits = c(-5,5)) +
              scale_fill_manual("Location", breaks = c("CL","EA","NV","WE"), 
                                values = c("#B45F04","#31B404","grey50","#013ADF")) +
              theme_bw() + theme(legend.position = "right"),
-           filename = paste("ef/plot/den/",tag[i],".png"),
+           filename = paste("igeo/plot/den/",tag[i],".png"),
            width = 6, height = 4, dpi = 600)
     
   }

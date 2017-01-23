@@ -298,7 +298,7 @@ denPlot <- function(dat,tag) {
              scale_fill_manual("Location", breaks = c("CL","EA","NV","WE"), 
                                values = c("#B45F04","#31B404","grey50","#013ADF")) +
              theme_bw() + theme(legend.position = "right"),
-           filename = paste("ef/plot/den/",tag[i],".png"),
+           filename = paste("ncpi/plot/den/",tag[i],".png"),
            width = 6, height = 4, dpi = 600)
     
   }
