@@ -3,36 +3,28 @@ rm(list = ls())
 library(dplyr);library(tidyr)
 
 ## Functions ----
-datareadln <- function(sel) { ## data readln ----
-    read.csv("./Data/Result_Sediment.csv") %>%
+datareadln <- function() { ## data readln ----
+  read.csv("./Data/Result_Sediment.csv") %>%
     dplyr::inner_join(read.csv("./Data/meta_SedimentSampleList.csv"), by = c("SplNo" = "SplNo")) %>%
     dplyr::right_join(read.csv("./Data/meta_Quadrat.csv"), by = c("QudNo" = "QudNo")) %>%
     dplyr::inner_join(read.csv("./Data/meta_SiteGroup.csv"), by = c("SiteID" = "SiteID")) %>% 
-    dplyr::select(N_Igeo:Pb_Igeo,SiteID,SplMonth,group) %>% View()
+    dplyr::select(N_EnrichmentFator:Pb_EnrichmentFator,SiteID,SplMonth,group) %>%
+    tidyr::gather(elem, resp, N_EnrichmentFator:Pb_EnrichmentFator) %>%
+    dplyr::mutate(elem = gsub("_EnrichmentFator", "", elem, fixed = T)) 
 }
 
-meanseCal <- function(dat, suffix = "") { ## calulate and output mean and se
+meanseCal <- function(dat) { ## calulate and output mean and se
   se <- function(v) {
     if(length(v) < 2) {NA} else {sd(v, na.rm = T)/sqrt(length(v)-sum(is.na(v)))}
   }
   dat %>%
-    dplyr::group_by(SiteID, group, SplMonth) %>%
-    dplyr::summarise(N_avg = mean(N,na.rm = T),N_se = se(N),
-                     C_avg = mean(C,na.rm = T),C_se = se(C),
-                     S_avg = mean(S,na.rm = T),S_se = se(S),
-                     P_avg = mean(P,na.rm = T),P_se = se(P),
-                     orgC_avg = mean(orgC,na.rm = T),orgC_se = se(orgC),
-                     Al_avg = mean(Al,na.rm = T),Al_se = se(Al),
-                     Cr_avg = mean(Cr,na.rm = T),Cr_se = se(Cr),
-                     Mn_avg = mean(Mn,na.rm = T),Mn_se = se(Mn),
-                     Fe_avg = mean(Fe,na.rm = T),Fe_se = se(Fe),
-                     Ni_avg = mean(Ni,na.rm = T),Ni_se = se(Ni),
-                     Cu_avg = mean(Cu,na.rm = T),Cu_se = se(Cu),
-                     Zn_avg = mean(Zn,na.rm = T),Zn_se = se(Zn),
-                     As_avg = mean(As,na.rm = T),As_se = se(As),
-                     Cd_avg = mean(Cd,na.rm = T),Cd_se = se(Cd),
-                     Pb_avg = mean(Pb,na.rm = T),Pb_se = se(Pb)) %>%
-    write.csv("sediment/log/SedimentElement.csv")
+    dplyr::group_by(SiteID, group, SplMonth, elem) %>%
+    dplyr::summarise(avg = mean(resp,na.rm = T),se = se(resp)) %>%
+    tidyr::gather(stat, value, avg:se) %>% 
+    dplyr::mutate(elemstat = paste(elem,stat,sep = "_")) %>%
+    dplyr::select(-elem,-stat) %>%
+    tidyr::spread(elemstat,value) %>% 
+    write.csv("ef/log/IndexStat.csv")
 }
 
 shapiroTest <- function(dat, tag, grouplv, SplMonthlv) {
@@ -72,13 +64,13 @@ modelCompare <- function(dat, tag, fact, log = TRUE) {
                                   time = date())) 
     if (comp$AIC[2] < comp$AIC[1]) mod.champion <- mod.challenger
   }
-  if (!file.exists("sediment/log/SedimentElementModel.csv")) {
+  if (!file.exists("ef/log/ModelComparing.csv")) {
     write.table(t(c("Df","AIC","BIC","Loglik","deviance","Chisq","ChiDf","Pr(>Chisq)","model","ref","result","time")),
-                file = "sediment/log/SedimentElementModel.csv", sep = ",", row.names = F, col.names = F)
+                file = "ef/log/ModelComparing.csv", sep = ",", row.names = F, col.names = F)
   } 
   if(log) {
     write.table(modlog, append = T, sep = ",", row.names = F, col.names = F,
-                file = "sediment/log/SedimentElementModel.csv")
+                file = "ef/log/ModelComparing.csv")
   }
   mod.champion
 }
@@ -148,7 +140,10 @@ plotFEsim2facet <- function (fe, modinf = NULL, level = 0.95, stat = "mean", sd 
     hlineInt <- 1
   }
   xvar <- "term"
-  fe$term <- factor(fe$term, levels = c("WE:Jul","WE:Nov","WE","Jul","Nov","EA","EA:Jul","EA:Nov"))
+  fe$term <- factor(fe$term, levels = c("Jul","Nov",
+                                        "WE","WE:Jul","WE:Nov",
+                                        "EA","EA:Jul","EA:Nov",
+                                        "NV","NV:Jul","NV:Nov"))
   if (!is.na(taglv)) { 
     tmp <- NULL
     for (k in 1: length(taglv)) {
@@ -243,32 +238,32 @@ multiElementMod <- function(dat, fact, SplMonthlv, grouplv, glv, gcode,
                                mutate(term = gsub("group","",term)) %>% 
                                mutate(term = gsub("SplMonth","",term)),
                              glv = glv, gcode = gcode, theme = theme_HL), 
-           paste("sediment/plot/",tag[i],"_Fixeff.png",sep=""),
+           paste("ef/plot/",tag[i],"_Fixeff.png",sep=""),
            width = 6, height = 4)
     #re
     re <- REsim(mod)
     re.g <- rbind(re.g, cbind(tag = tag[i],re))
     ggsave(plot = merTools::plotREsim(re), 
-           paste("sediment/plot/",tag[i],"_Raneff.png",sep=""),
+           paste("ef/plot/",tag[i],"_Raneff.png",sep=""),
            width = 6, height = 4)
     #resid
-    png(paste("sediment/plot/",tag[i],"_diag_resid.png",sep=""), 
+    png(paste("ef/plot/",tag[i],"_diag_resid.png",sep=""), 
         width = 30, height = 20, units = "cm", res = 600)
     print(plot(mod, type = c("p", "smooth")))
     dev.off()
-    png(paste("sediment/plot/",tag[i],"_diag_residQQ.png",sep=""), 
+    png(paste("ef/plot/",tag[i],"_diag_residQQ.png",sep=""), 
         width = 30, height = 20, units = "cm", res = 600)
     print(qqmath(mod, id = 0.05))
     dev.off()
-    #png(paste("sediment/plot/",tag[i],"_diag_zeta.png",sep=""), 
+    #png(paste("ef/plot/",tag[i],"_diag_zeta.png",sep=""), 
     #    width = 30, height = 20, units = "cm", res = 600)
     #something using xyplot
     #dev.off()
-    #png(paste("sediment/plot/",tag[i],"_diag_dens.png",sep=""), 
+    #png(paste("ef/plot/",tag[i],"_diag_dens.png",sep=""), 
     #    width = 30, height = 20, units = "cm", res = 600)
     #something using densityplot
     #dev.off()
-    #png(paste("sediment/plot/",tag[i],"_diag_pair.png",sep=""), 
+    #png(paste("ef/plot/",tag[i],"_diag_pair.png",sep=""), 
     #    width = 30, height = 20, units = "cm", res = 600)
     #something using splom
     #dev.off()
@@ -279,35 +274,46 @@ multiElementMod <- function(dat, fact, SplMonthlv, grouplv, glv, gcode,
                                 Pvalue = resid$p.value))
   }
   ## output
-  if (log) {write.csv(x = fe.g, file = paste("sediment/log/FixedEff",suffix,".csv",sep = ""), row.names = F)
-    write.csv(x = re.g, file = paste("sediment/log/RandomEff",suffix,".csv",sep = ""), row.names = F)
-    write.csv(x = modinf.g, file = paste("sediment/log/ModelChoice",suffix,".csv",sep = ""), row.names = F) 
-    write.csv(x = shapiro.g, file = paste("sediment/log/ShapiroRawData",suffix,".csv",sep = ""), row.names = F) 
-    write.csv(x = posthoc.g, file = paste("sediment/log/Posthoc",suffix,".csv",sep = ""), row.names = F) 
-    write.csv(x = modavo.g, file = paste("sediment/log/ModelAnova",suffix,".csv",sep = ""), row.names = F) 
-    write.csv(x = resid.g, file = paste("sediment/log/ShapiroResid",suffix,".csv",sep = ""), row.names = F)
+  if (log) {write.csv(x = fe.g, file = paste("ef/log/FixedEff",suffix,".csv",sep = ""), row.names = F)
+    write.csv(x = re.g, file = paste("ef/log/RandomEff",suffix,".csv",sep = ""), row.names = F)
+    write.csv(x = modinf.g, file = paste("ef/log/ModelChoice",suffix,".csv",sep = ""), row.names = F) 
+    write.csv(x = shapiro.g, file = paste("ef/log/ShapiroRawData",suffix,".csv",sep = ""), row.names = F) 
+    write.csv(x = posthoc.g, file = paste("ef/log/Posthoc",suffix,".csv",sep = ""), row.names = F) 
+    write.csv(x = modavo.g, file = paste("ef/log/ModelAnova",suffix,".csv",sep = ""), row.names = F) 
+    write.csv(x = resid.g, file = paste("ef/log/ShapiroResid",suffix,".csv",sep = ""), row.names = F)
   }
   "DONE!"
 }
 
-## example ----
+## Basic Stat information ----
+meanseCal(datareadln())
 
+## LMM fiting and ploting ----
+multiElementMod(dat = datareadln(),
+                fact = c("group + (1|SiteID)",
+                         "SplMonth + (1|SiteID)",
+                         "group + (1|SiteID:SplMonth)",
+                         "SplMonth + (1|SiteID:SplMonth)",
+                         "group + (1|SiteID) + (1|SiteID:SplMonth)",
+                         "SplMonth + (1|SiteID) + (1|SiteID:SplMonth)",
+                         "group + SplMonth + (1|SiteID)",
+                         "group + SplMonth + (1|SiteID:SplMonth)",
+                         "group + SplMonth + (1|SiteID) + (1|SiteID:SplMonth)",
+                         "group * SplMonth + (1|SiteID)",
+                         "group * SplMonth + (1|SiteID:SplMonth)",
+                         "group * SplMonth + (1|SiteID) + (1|SiteID:SplMonth)"),
+                SplMonthlv = c("Apr","Jul","Nov"), grouplv = c("EA","CL","WE","NV"), 
+                glv = c("EA","WE","NV"), gcode = c("#31B404","#013ADF","grey50"))
 
-datareadln(sel = paste(c("N","Cu"),"_Igeo",sep = "")) %>% View() write.csv("log/data.csv")
-anovaCal(dat = datareadln()[-84:-85,], indx = c("Igeo","EnrichmentFator")) %>% filter(!is.na(numDF)) %>%
-  write.csv("log/anova.csv")
-mainPlot(dat = datareadln()[-84:-85,], indx = "Igeo", ncolfe = 5, ncolre = 5, archiplot = F, suffix = "_G",
-         taglv = c("N","C","orgC","S","P","Al","Fe","Mn","Cu","Zn","Ni","Cr","Pb","As","Cd"),
-         glv = c("EA","NV","WE"), gcode = c("#31B404","grey50","#013ADF"))
-mainPlot(dat = datareadln()[-84:-85,], indx = "EnrichmentFator",ncolfe = 4,ncolre = 4, archiplot = T, suffix = "_G",
-         taglv = c("N","C","S","Fe","Mn","Cu","Zn","Ni","Cr","Pb","As","Cd"),
-         glv = c("EA","NV","WE"), gcode = c("#31B404","grey50","#013ADF"))
-#mainPlot(dat = datareadln()[-84:-85,], indx = "Igeo", ncolfe = 5, ncolre = 5, archiplot = F, ranecal = F,  suffix = "_M",
-#         taglv = c("N","C","orgC","S","P","Al","Fe","Mn","Cu","Zn","Ni","Cr","Pb","As","Cd"),
-#         glv = c("Nov","Jul"), gcode = c("brown","green"))
-#mainPlot(dat = datareadln()[-84:-85,], indx = "EnrichmentFator",ncolfe = 4,ncolre = 4, archiplot = F, ranecal = F,  suffix = "_M",
-#         taglv = c("N","C","S","Fe","Mn","Cu","Zn","Ni","Cr","Pb","As","Cd"),
-#         glv = c("Nov","Jul"), gcode = c("brown","green"))
-
-
-
+## Gather ploting ----
+ggsave(plot = plotFEsim2facet(read.csv("igeo/log/FixedEff.csv") %>% 
+                                filter(term != "(Intercept)") %>% 
+                                mutate(term = gsub("group","",term)) %>% 
+                                mutate(term = gsub("SplMonth","",term)),
+                              glv = c("EA","WE", "NV"), gcode = c("#31B404","#013ADF","grey50"), ncol = 5,
+                              theme = theme_bw() + theme(legend.position = "none",
+                                                         axis.text = element_text(size= 4,angle = 30),
+                                                         axis.title = element_text(size= 6),
+                                                         strip.text = element_text(size= 6))), 
+       "ef/plot/Fixeff.png",
+       width = 6, height = 4, dpi = 600)

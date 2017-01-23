@@ -303,14 +303,14 @@ multiElementMod(dat = datareadln(),
                          "group * SplMonth + (1|SiteID:SplMonth)",
                          "group * SplMonth + (1|SiteID) + (1|SiteID:SplMonth)"),
                 SplMonthlv = c("Apr","Jul","Nov"), grouplv = c("EA","CL","WE","NV"), 
-                glv = c("EA","WE","NV"), gcode = c("#31B404","#013ADF","grey80"))
+                glv = c("EA","WE","NV"), gcode = c("#31B404","#013ADF","grey50"))
 
 ## Gather ploting ----
 ggsave(plot = plotFEsim2facet(read.csv("igeo/log/FixedEff.csv") %>% 
                                 filter(term != "(Intercept)") %>% 
                                 mutate(term = gsub("group","",term)) %>% 
                                 mutate(term = gsub("SplMonth","",term)),
-                              glv = c("EA","WE", "NV"), gcode = c("#31B404","#013ADF","grey80"), ncol = 5,
+                              glv = c("EA","WE", "NV"), gcode = c("#31B404","#013ADF","grey50"), ncol = 5,
                               theme = theme_bw() + theme(legend.position = "none",
                                                          axis.text = element_text(size= 4,angle = 30),
                                                          axis.title = element_text(size= 6),
