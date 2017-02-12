@@ -99,7 +99,7 @@ pcaLoadingPlot <- function(dat, grouped = T, themeset, suffix = "", emphtag = NA
 }
 
 pairPlot <- function(dat, xtag, ytag, themeset, suffix = "") {
-  p <- ggplot(aes_(x = xtag, y = ytag, col = "group"), data = dat) + 
+  p <- ggplot(aes_string(x = xtag, y = ytag, col = "group"), data = dat) + 
     geom_point() + 
     geom_smooth(aes(fill = group), method = "lm", col = "black") + 
     facet_wrap(~ group, scales = "free") + 
@@ -123,7 +123,7 @@ pairPlot(dat = datareadln(), xtag = "orgC", ytag = "Cd", themeset = themeset)
 pairPlot(dat = datareadln(), xtag = "Al", ytag = "Cd", themeset = themeset)
 pairPlot(dat = datareadln(), xtag = "orgC", ytag = "S", themeset = themeset)
 
-ggplot(aes_(x = orgC, y = S, col = group), data = datareadln()) + 
+ggplot(aes_(x = "orgC", y = "S", col = "group"), data = datareadln()) + 
   geom_point() + 
   geom_smooth(aes(fill = group), method = "lm", col = "black", ) + 
   facet_wrap(~ group, scales = "free") + 
