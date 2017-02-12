@@ -82,7 +82,7 @@ pcaLoadingPlot <- function(dat, grouped = T, themeset, suffix = "", emphtag = NA
     xlim(-1.1, 1.1) +ylim(-1.1, 1.1) + 
     themeset
   taglv <- levels(dat$tag); ntaglv <- length(taglv)
-  alphaSet <- rep(0.3, ntaglv); sizeSet <- rep(0.5, ntaglv); colSet <- rep("black", ntaglv)
+  alphaSet <- rep(if(grouped) 0.3 else 1, ntaglv); sizeSet <- rep(0.5, ntaglv); colSet <- rep("black", ntaglv)
   if(grouped) {if(!is.na(emphtag)) {
     for(i in 1:length(emphtag)) {
       alphaSet[taglv == emphtag[i]] <- 1
@@ -98,12 +98,37 @@ pcaLoadingPlot <- function(dat, grouped = T, themeset, suffix = "", emphtag = NA
          width = 6, height = 6, dpi = 600)
 }
 
+pairPlot <- function(dat, xtag, ytag, themeset, suffix = "") {
+  p <- ggplot(aes_(x = xtag, y = ytag, col = "group"), data = dat) + 
+    geom_point() + 
+    geom_smooth(aes(fill = group), method = "lm", col = "black") + 
+    facet_wrap(~ group, scales = "free") + 
+    scale_color_manual("Location", breaks = c("CL","EA","NV","WE"), 
+                       values = c("#B45F04","#31B404","grey50","#013ADF"))+
+    scale_fill_manual("Location", breaks = c("CL","EA","NV","WE"), 
+                      values = c("#B45F04","#31B404","grey50","#013ADF"))+
+    themeset
+  ggsave(plot = p,
+         filename = paste("pca/plot/pair_", ytag, "_", xtag, suffix, ".png", sep = ""),
+         width = 6, height = 6, dpi = 600)
+}
+
 ## Example ----
 pcaLoading <- pcaLoadingCal(datareadln())
 library(ggplot2)
-themeset <- theme_bw() + theme(aspect.ratio = 1, legend.position = "none", plot.background = element_blank())
-pcaLoadingPlot(dat = pcaLoading, themeset = themeset, emphtag = c("S","Cd"), suffix = "_g_tp")
-pcaLoadingPlot(pcaLoading, grouped = F, themeset = themeset, suffix = "_a_tp")
 themeset <- theme_bw() + theme(aspect.ratio = 1, legend.position = "none")
 pcaLoadingPlot(pcaLoading, themeset = themeset, emphtag = c("S","Cd"), suffix = "_g")
 pcaLoadingPlot(pcaLoading, grouped = F, themeset = themeset, suffix = "_a")
+pairPlot(dat = datareadln(), xtag = "orgC", ytag = "Cd", themeset = themeset)
+pairPlot(dat = datareadln(), xtag = "Al", ytag = "Cd", themeset = themeset)
+pairPlot(dat = datareadln(), xtag = "orgC", ytag = "S", themeset = themeset)
+
+ggplot(aes_(x = orgC, y = S, col = group), data = datareadln()) + 
+  geom_point() + 
+  geom_smooth(aes(fill = group), method = "lm", col = "black", ) + 
+  facet_wrap(~ group, scales = "free") + 
+  scale_color_manual("Location", breaks = c("CL","EA","NV","WE"), 
+                    values = c("#B45F04","#31B404","grey50","#013ADF"))+
+  scale_fill_manual("Location", breaks = c("CL","EA","NV","WE"), 
+                     values = c("#B45F04","#31B404","grey50","#013ADF"))+
+  themeset
