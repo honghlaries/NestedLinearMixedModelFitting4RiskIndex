@@ -50,12 +50,12 @@ pcaLoadingCal <- function(dat, grouped = T, log = T) { ## cal and log the pca lo
     }
   }
   if(log) {
-    write.csv(pca/log/pcaLoading.csv)
+    write.csv("pca/log/pcaLoading.csv")
   }
   rst.tot
 }
 
-pcaLoadingPlot <- function(dat, grouped = T, themeset, suffix = ""){ ## output the pca loading plot
+pcaLoadingPlot <- function(dat, grouped = T, themeset, suffix = "", emphtag = NA){ ## output the pca loading plot
   library(dplyr);library(tidyr);library(ggplot2)
   circleFun <- function(center = c(0,0), r = 1, npoints = 100){
     tt <- seq(0,2*pi,length.out = npoints)
@@ -64,35 +64,46 @@ pcaLoadingPlot <- function(dat, grouped = T, themeset, suffix = ""){ ## output t
     return(data.frame(x = xx, y = yy))
   }
   if (grouped) {
-    dat <- dat%>%
-      select(group != "all")
+    dat <- dat%>% filter(group != "all")
   } else {
-    select(group == "all")
+    dat <- dat%>% filter(group == "all")
   }
   zeros <- data.frame(RC1 = 0, RC2 = 0, tag = dat$tag, group = dat$group)
   dat2 <- rbind(zeros,dat)
-  p <- 
-  ggsave(plot = ggplot() +
-           geom_path(aes(x = RC1, y = RC2, group = tag),
-                     arrow = arrow(angle = 15, length = unit(0.15, "inches"),
-                                   ends = "last", type = "open"),
-                     size = 0.7, data = dat2) +
-           geom_path(aes(x = x, y = y),col = "black", size = 0.7, linetype = 2, data = circleFun())+
-           geom_text(aes(x = 1.1 * RC1, y = 1.1 * RC2, label = tag),
-                     check_overlap = F,data = dat) +
-           facet_wrap(~ group) +
-           xlim(-1.1, 1.1) +ylim(-1.1, 1.1) + 
-           themeset,
+  p <- ggplot() +
+    geom_path(aes(x = RC1, y = RC2, group = tag, col = tag, alpha = tag, size = tag),
+              arrow = arrow(angle = 15, length = unit(0.10, "inches"),
+                            ends = "last", type = "open"),
+              data = dat2) +
+    geom_path(aes(x = x, y = y),col = "black", size = 0.7, linetype = 2, data = circleFun())+
+    geom_text(aes(x = 1.1 * RC1, y = 1.1 * RC2, label = tag, col = tag, alpha = tag),
+              check_overlap = F,data = dat) +
+    facet_wrap(~ group) +
+    xlim(-1.1, 1.1) +ylim(-1.1, 1.1) + 
+    themeset
+  taglv <- levels(dat$tag); ntaglv <- length(taglv)
+  alphaSet <- rep(0.3, ntaglv); sizeSet <- rep(0.5, ntaglv); colSet <- rep("black", ntaglv)
+  if(grouped) {if(!is.na(emphtag)) {
+    for(i in 1:length(emphtag)) {
+      alphaSet[taglv == emphtag[i]] <- 1
+      sizeSet[taglv == emphtag[i]] <- 0.75
+      colSet[taglv == emphtag[i]] <- "red"
+    }
+  }}
+  p <- p + scale_alpha_manual(breaks = taglv, values = alphaSet) +
+    scale_size_manual(breaks = taglv, values = sizeSet) +
+    scale_color_manual(breaks = taglv, values = colSet) 
+  ggsave(plot = p,
          filename = paste("pca/plot/pcaLoading", suffix, ".png", sep = ""),
          width = 6, height = 6, dpi = 600)
 }
 
-## Example
-pcaLoading <- pcaLoadingcal(datareadln())
-library(ggolot2)
-themeset <- theme_bw() + theme(aspect.ratio = 1, plot.background = element_blank())
-pcaLoadingPlot(pcaLoading, themeset = themeset, suffix = "_g_tp")
+## Example ----
+pcaLoading <- pcaLoadingCal(datareadln())
+library(ggplot2)
+themeset <- theme_bw() + theme(aspect.ratio = 1, legend.position = "none", plot.background = element_blank())
+pcaLoadingPlot(dat = pcaLoading, themeset = themeset, emphtag = c("S","Cd"), suffix = "_g_tp")
 pcaLoadingPlot(pcaLoading, grouped = F, themeset = themeset, suffix = "_a_tp")
-themeset <- theme_bw() + theme(aspect.ratio = 1, plot.background = element_blank())
-pcaLoadingPlot(pcaLoading, themeset = themeset, suffix = "_g")
-pcaLoadingPlot(pcaLoading, grouped = F, themeset = themeset, suffix = "_g")
+themeset <- theme_bw() + theme(aspect.ratio = 1, legend.position = "none")
+pcaLoadingPlot(pcaLoading, themeset = themeset, emphtag = c("S","Cd"), suffix = "_g")
+pcaLoadingPlot(pcaLoading, grouped = F, themeset = themeset, suffix = "_a")
