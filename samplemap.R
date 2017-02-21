@@ -103,6 +103,7 @@ ggplot()+
   scale_fill_identity() +
   scale_colour_identity()+
   scale_shape_manual(values = c(16,17,18,15))+
+  coord_map(projection = "azequidistant") +
   theme_bw()+
   theme(axis.ticks = element_blank(),
         axis.line = element_blank(),
