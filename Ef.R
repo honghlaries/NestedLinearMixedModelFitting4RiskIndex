@@ -338,7 +338,7 @@ ggsave(plot = plotFEsim2facet(read.csv("ef/log/FixedEff.csv") %>%
                                                          axis.text = element_text(size= 4,angle = 30),
                                                          axis.title = element_text(size= 6),
                                                          strip.text = element_text(size= 6))), 
-       "ef/plot/Fixeff.png",
+       filename = "ef/plot/Fixeff.png",
        width = 6, height = 4, dpi = 600)
 
 ## density ploting ----

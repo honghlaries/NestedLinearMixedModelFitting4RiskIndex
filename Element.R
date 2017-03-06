@@ -8,7 +8,7 @@ datareadln <- function(sel) { ## data readln ----
     dplyr::inner_join(read.csv("./Data/meta_SedimentSampleList.csv"), by = c("SplNo" = "SplNo")) %>%
     dplyr::right_join(read.csv("./Data/meta_Quadrat.csv"), by = c("QudNo" = "QudNo")) %>%
     dplyr::inner_join(read.csv("./Data/meta_SiteGroup.csv"), by = c("SiteID" = "SiteID")) %>% 
-    dplyr::select(N_Igeo:Pb_Igeo,SiteID,SplMonth,group) %>% View()
+    dplyr::select(N:Pb,SiteID,SplMonth,group)
 }
 
 meanseCal <- function(dat, suffix = "") { ## calulate and output mean and se
@@ -302,6 +302,7 @@ mainPlot(dat = datareadln()[-84:-85,], indx = "Igeo", ncolfe = 5, ncolre = 5, ar
 mainPlot(dat = datareadln()[-84:-85,], indx = "EnrichmentFator",ncolfe = 4,ncolre = 4, archiplot = T, suffix = "_G",
          taglv = c("N","C","S","Fe","Mn","Cu","Zn","Ni","Cr","Pb","As","Cd"),
          glv = c("EA","NV","WE"), gcode = c("#31B404","grey50","#013ADF"))
+
 #mainPlot(dat = datareadln()[-84:-85,], indx = "Igeo", ncolfe = 5, ncolre = 5, archiplot = F, ranecal = F,  suffix = "_M",
 #         taglv = c("N","C","orgC","S","P","Al","Fe","Mn","Cu","Zn","Ni","Cr","Pb","As","Cd"),
 #         glv = c("Nov","Jul"), gcode = c("brown","green"))
