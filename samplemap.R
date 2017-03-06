@@ -92,7 +92,6 @@ ggplot()+
                aes(x = Longitude, y = Latitude, fill = "black"))+
   geom_point(data = coo.site , 
              aes(x = Longitude, y = Latitude, col = col ,size = 8, shape = group))+
-  coord_equal(xlim = c(121.2475, 121.2725), ylim = c(32.4475, 32.4725))+
   scale_x_continuous(breaks = 121.25 + 0:4 * 0.005, 
                      labels = paste("121°",c(15 + 0:4 * 0.3),"'E",sep=""))+
   geom_vline(xintercept = 121.25 + 0:4 * 0.005, alpha = 0.5)+
@@ -103,7 +102,8 @@ ggplot()+
   scale_fill_identity() +
   scale_colour_identity()+
   scale_shape_manual(values = c(16,17,18,15))+
-  coord_map(projection = "azequidistant") +
+  coord_map(xlim = c(121.2475, 121.2725), ylim = c(32.4475, 32.4725),
+            projection = "azequidistant") +
   theme_bw()+
   theme(axis.ticks = element_blank(),
         axis.line = element_blank(),
@@ -142,7 +142,6 @@ ggplot()+
                aes(x = Longitude, y = Latitude, fill = "black"))+
   geom_point(data = coo.site, 
              aes(x = Longitude, y = Latitude, col = col ,size = 8, shape = group))+
-  coord_equal(xlim = c(121.41, 121.425), ylim = c(32.3625, 32.3775))+
   scale_x_continuous(breaks = 121.4125 + 0:2 * 0.005, 
                      labels = paste("121°",(0.4125 + 0:2 * 0.005) * 60 ,"'E",sep=""))+
   geom_vline(xintercept = 121.4125 + 0:2 * 0.005, alpha = 0.5) +
@@ -150,9 +149,11 @@ ggplot()+
                      labels = paste("32°",(0.365 + 0:2 * 0.005) * 60,"'N",sep=""))+
   geom_hline(yintercept = 32.365 + 0:2 * 0.005, alpha = 0.5) +
   scale_size_identity()+
-  scale_fill_identity() +
+  scale_fill_identity()+
   scale_colour_identity()+
   scale_shape_manual(values = c(16,17,18,15))+
+  coord_map(xlim = c(121.41, 121.425), ylim = c(32.3625, 32.3775),
+            projection = "azequidistant")+
   theme_bw()+
   theme(axis.ticks = element_blank(),
         axis.line = element_blank(),
@@ -191,13 +192,14 @@ ggplot()+
                aes(x = Longitude, y = Latitude, fill = "#555555"))+
   geom_point(data = coo.site , 
              aes(x = Longitude, y = Latitude, col = col ,size = 2))+
-  coord_equal(ratio = 1, xlim = c(121.23, 121.45), ylim = c(32.35, 32.48))+
   scale_x_continuous(breaks = 121.235 + 0:6 * 0.035, 
                      labels = paste("121°",(0.235 + 0:6 * 0.035) * 60 ,"'E",sep=""))+
   #geom_vline(xintercept = 121.235 + 0:6 * 0.035, alpha = 0.5) +
   scale_y_continuous(breaks = 32.355 + 0:3 * 0.040, 
                      labels = paste("32°",(0.355 + 0:3 * 0.040) * 60,"'N",sep=""))+
   #geom_hline(yintercept = 32.355 + 0:3 * 0.040, alpha = 0.5) +
+  coord_map(xlim =  c(121.23, 121.45), ylim = c(32.35, 32.48),
+            projection = "azequidistant")+
   scale_size_identity()+
   scale_fill_identity() +
   scale_colour_identity()+
