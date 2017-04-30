@@ -1,11 +1,7 @@
 ## clean ----
 rm(list = ls())
-folderCreating <- function(dirs) {
-  for(i in 1:length(dirs)) {
-    if(!dir.exists(dirs[i])) dir.create(dirs[i])
-  }
-}
-folderCreating(dirs = c("pca","pca/plot","pca/log"))
+pkgInitialization(c("ggplot2","dplyr","tidyr","gridExtra"))
+source("uniTls_presetPaths.R");source("uniTls_pkgInstall.R");source("const.R");
 
 ## Functions ----
 datareadln <- function() { ## data readln
@@ -98,37 +94,83 @@ pcaLoadingPlot <- function(dat, grouped = T, themeset, suffix = "", emphtag = NA
          width = 6, height = 6, dpi = 600)
 }
 
-pairPlot <- function(dat, xtag, ytag, themeset, suffix = "") {
-  p <- ggplot(aes_string(x = xtag, y = ytag, col = "group"), data = dat) + 
+pairPlot <- function(dat, xtag, ytag, gtag = "group") {
+  library(ggplot2);library(dplyr);library(tidyr)
+  x <- dat[xtag][,1]; y <- dat[ytag][,1]; g<- dat[gtag][,1] 
+  g.lv <- as.character(unique(g))
+  
+  lmfitness <- NULL
+  for(i in 1: length(g.lv)) {
+    dat1 <- data.frame(x = x, y = y)[g == g.lv[i],]
+    #plot(y ~ x, dat = dat1)
+    mod <- lm(y ~ x, data = dat1); aov <- anova(mod)
+    rsq <- aov$`Sum Sq`
+    rsq.fmt<- paste("R^2 = ",format(100*rsq[1]/(sum(rsq)), nsmall  = 1, digits = 1),"%", sep = "")
+    p <- aov$`Pr(>F)`[1]
+    p.fmt <- if(p < 0.001) "p < 0.001" else paste("p = ",format(p, nsmall = 3, digits = 1), sep = "")
+    coeff <- format(mod$coefficients, scientific = T, nsmall = 3, digits = 3)
+    coeff.fmt <- paste("[",ytag,"] = ", coeff[2], "[",xtag,"] + ",coeff[1], sep = "")
+    lmfitness <- rbind(lmfitness, 
+                       data.frame(x.l = 0.5*max(dat1$x) + 0.5*min(dat1$x), 
+                                  y.l = 0.9*max(dat1$y) + 0.1*min(dat1$y),
+                                  g = g.lv[i], r.fmt = rsq.fmt, p = p, p.fmt = p.fmt, 
+                       sig = (p < 0.05), coeff.fmt = if(p < 0.05) coeff.fmt else ""))
+  }
+  
+  dat <- data.frame(x = x, y = y, g = g) %>% 
+    inner_join(lmfitness[c("g","sig")], by = c("g" = "g"))
+  
+  ggplot(aes(x = x, y = y, col = g), data = dat) + 
     geom_point() + 
-    geom_smooth(aes(fill = group), method = "lm", col = "black") + 
-    facet_wrap(~ group, scales = "free") + 
-    scale_color_manual("Location", breaks = c("CL","EA","NV","WE"), 
-                       values = c("#B45F04","#31B404","grey50","#013ADF"))+
-    scale_fill_manual("Location", breaks = c("CL","EA","NV","WE"), 
-                      values = c("#B45F04","#31B404","grey50","#013ADF"))+
-    themeset
-  ggsave(plot = p,
-         filename = paste("pca/plot/pair_", ytag, "_", xtag, suffix, ".png", sep = ""),
-         width = 6, height = 6, dpi = 600)
+    geom_smooth(aes(fill = g, alpha = sig, linetype = sig), method = "lm", col = "black") + 
+    geom_text(aes(label = paste(r.fmt,", ",p.fmt,"\n",coeff.fmt, sep = ""), 
+                  x = x.l, y = y.l),
+              size = 3, col = "black", data = lmfitness) +
+    facet_wrap(~ g, scales = "free") + 
+    scale_alpha_manual(values = c(0,0.4), breaks = c(1,0)) +
+    scale_linetype_manual(values = c(2,1), breaks = c(1,0)) 
 }
 
 ## Example ----
 pcaLoading <- pcaLoadingCal(datareadln())
 library(ggplot2)
 themeset <- theme_bw() + theme(aspect.ratio = 1, legend.position = "none")
+
 pcaLoadingPlot(pcaLoading, themeset = themeset, emphtag = c("S","Cd"), suffix = "_g")
 pcaLoadingPlot(pcaLoading, grouped = F, themeset = themeset, suffix = "_a")
-pairPlot(dat = datareadln(), xtag = "orgC", ytag = "Cd", themeset = themeset)
-pairPlot(dat = datareadln(), xtag = "Al", ytag = "Cd", themeset = themeset)
-pairPlot(dat = datareadln(), xtag = "orgC", ytag = "S", themeset = themeset)
 
-ggplot(aes_(x = "orgC", y = "S", col = "group"), data = datareadln()) + 
-  geom_point() + 
-  geom_smooth(aes(fill = group), method = "lm", col = "black", ) + 
-  facet_wrap(~ group, scales = "free") + 
+pairPlot(dat = datareadln(), xtag = "orgC", ytag = "Cd") +
+  scale_x_continuous("organic carbon (mg/kg)") + 
+  scale_y_continuous("Cd (mg/kg)") + 
   scale_color_manual("Location", breaks = c("CL","EA","NV","WE"), 
-                    values = c("#B45F04","#31B404","grey50","#013ADF"))+
+                     values = c("#B45F04","#31B404","grey50","#013ADF")) +
   scale_fill_manual("Location", breaks = c("CL","EA","NV","WE"), 
-                     values = c("#B45F04","#31B404","grey50","#013ADF"))+
-  themeset
+                    values = c("#B45F04","#31B404","grey50","#013ADF")) +
+  themeset -> p1
+
+pairPlot(dat = datareadln(), xtag = "Al", ytag = "Cd") +
+  scale_x_continuous("Al (mg/kg)") + 
+  scale_y_continuous("Cd (mg/kg)") + 
+  scale_color_manual("Location", breaks = c("CL","EA","NV","WE"), 
+                     values = c("#B45F04","#31B404","grey50","#013ADF")) +
+  scale_fill_manual("Location", breaks = c("CL","EA","NV","WE"), 
+                    values = c("#B45F04","#31B404","grey50","#013ADF")) +
+  themeset -> p2
+
+grid.arrange(p1,p2, ncol =2, widths = c(5,5), heights = 5) -> p
+ggsave(filename = "pca/pair_Cd.png", plot = p, dpi = 600)
+
+pairPlot(dat = datareadln(), xtag = "orgC", ytag = "S") +
+  scale_x_continuous("organic carbon (mg/kg)") + 
+  scale_y_continuous("S (mg/kg)") + 
+  scale_color_manual("Location", breaks = c("CL","EA","NV","WE"), 
+                     values = c("#B45F04","#31B404","grey50","#013ADF")) +
+  scale_fill_manual("Location", breaks = c("CL","EA","NV","WE"), 
+                    values = c("#B45F04","#31B404","grey50","#013ADF")) +
+  themeset -> p 
+ggsave(filename = "pca/pair_S.png", plot = p, dpi = 600)
+
+
+
+
+  
