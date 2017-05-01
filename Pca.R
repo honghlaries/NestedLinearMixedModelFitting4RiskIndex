@@ -105,7 +105,7 @@ pairPlot <- function(dat, xtag, ytag, gtag = "group") {
     #plot(y ~ x, dat = dat1)
     mod <- lm(y ~ x, data = dat1); aov <- anova(mod)
     rsq <- aov$`Sum Sq`
-    rsq.fmt<- paste("R^2 = ",format(100*rsq[1]/(sum(rsq)), nsmall  = 1, digits = 1),"%", sep = "")
+    rsq.fmt<- paste("R square = ",format(100*rsq[1]/(sum(rsq)), nsmall  = 1, digits = 1),"%", sep = "")
     p <- aov$`Pr(>F)`[1]
     p.fmt <- if(p < 0.001) "p < 0.001" else paste("p = ",format(p, nsmall = 3, digits = 1), sep = "")
     coeff <- format(mod$coefficients, scientific = T, nsmall = 3, digits = 3)
@@ -133,8 +133,6 @@ pairPlot <- function(dat, xtag, ytag, gtag = "group") {
 
 ## Example ----
 pcaLoading <- pcaLoadingCal(datareadln())
-library(ggplot2)
-themeset <- theme_bw() + theme(aspect.ratio = 1, legend.position = "none")
 
 pcaLoadingPlot(pcaLoading, themeset = themeset, emphtag = c("S","Cd"), suffix = "_g")
 pcaLoadingPlot(pcaLoading, grouped = F, themeset = themeset, suffix = "_a")
@@ -146,18 +144,7 @@ pairPlot(dat = datareadln(), xtag = "orgC", ytag = "Cd") +
                      values = c("#B45F04","#31B404","grey50","#013ADF")) +
   scale_fill_manual("Location", breaks = c("CL","EA","NV","WE"), 
                     values = c("#B45F04","#31B404","grey50","#013ADF")) +
-  themeset -> p1
-
-pairPlot(dat = datareadln(), xtag = "Al", ytag = "Cd") +
-  scale_x_continuous("Al (mg/kg)") + 
-  scale_y_continuous("Cd (mg/kg)") + 
-  scale_color_manual("Location", breaks = c("CL","EA","NV","WE"), 
-                     values = c("#B45F04","#31B404","grey50","#013ADF")) +
-  scale_fill_manual("Location", breaks = c("CL","EA","NV","WE"), 
-                    values = c("#B45F04","#31B404","grey50","#013ADF")) +
-  themeset -> p2
-
-grid.arrange(p1,p2, ncol =2, widths = c(5,5), heights = 5) -> p
+  themeset -> p
 ggsave(filename = "pca/pair_Cd.png", plot = p, dpi = 600)
 
 pairPlot(dat = datareadln(), xtag = "orgC", ytag = "S") +
