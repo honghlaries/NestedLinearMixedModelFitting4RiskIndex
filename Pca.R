@@ -95,7 +95,7 @@ pcaLoadingPlot <- function(dat, grouped = T, themeset, suffix = "", emphtag = NA
 }
 
 pairPlot <- function(dat, xtag, ytag, gtag = "group") {
-  library(ggplot2);library(dplyr);library(tidyr)
+  library(ggplot2);library(dplyr);library(tidyr);library(MASS);library(car)
   x <- dat[xtag][,1]; y <- dat[ytag][,1]; g<- dat[gtag][,1] 
   g.lv <- as.character(unique(g))
   
@@ -103,10 +103,10 @@ pairPlot <- function(dat, xtag, ytag, gtag = "group") {
   for(i in 1: length(g.lv)) {
     dat1 <- data.frame(x = x, y = y)[g == g.lv[i],]
     #plot(y ~ x, dat = dat1)
-    mod <- lm(y ~ x, data = dat1); aov <- anova(mod)
+    mod <- rlm(y ~ x, data = dat1); aov <- anova(mod); Aov <- Anova(mod);
     rsq <- aov$`Sum Sq`
     rsq.fmt<- paste("R square = ",format(100*rsq[1]/(sum(rsq)), nsmall  = 1, digits = 1),"%", sep = "")
-    p <- aov$`Pr(>F)`[1]
+    p <- Aov$`Pr(>F)`[1]
     p.fmt <- if(p < 0.001) "p < 0.001" else paste("p = ",format(p, nsmall = 3, digits = 1), sep = "")
     coeff <- format(mod$coefficients, scientific = T, nsmall = 3, digits = 3)
     coeff.fmt <- paste("[",ytag,"] = ", coeff[2], "[",xtag,"] + ",coeff[1], sep = "")
