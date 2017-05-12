@@ -1,7 +1,7 @@
 ## clean ----
 rm(list = ls())
-pkgInitialization(c("ggplot2","dplyr","tidyr","gridExtra"))
 source("uniTls_presetPaths.R");source("uniTls_pkgInstall.R");source("const.R");
+pkgInitialization(c("ggplot2","dplyr","tidyr","gridExtra"))
 
 ## Functions ----
 datareadln <- function() { ## data readln
@@ -111,8 +111,8 @@ pairPlot <- function(dat, xtag, ytag, gtag = "group") {
     coeff <- format(mod$coefficients, scientific = T, nsmall = 3, digits = 3)
     coeff.fmt <- paste("[",ytag,"] = ", coeff[2], "[",xtag,"] + ",coeff[1], sep = "")
     lmfitness <- rbind(lmfitness, 
-                       data.frame(x.l = 0.5*max(dat1$x) + 0.5*min(dat1$x), 
-                                  y.l = 0.9*max(dat1$y) + 0.1*min(dat1$y),
+                       data.frame(x.l = 0.5*max(dat1$x,na.rm = T) + 0.5*min(dat1$x,na.rm = T), 
+                                  y.l = 0.9*max(dat1$y,na.rm = T) + 0.1*min(dat1$y,na.rm = T),
                                   g = g.lv[i], r.fmt = rsq.fmt, p = p, p.fmt = p.fmt, 
                        sig = (p < 0.05), coeff.fmt = if(p < 0.05) coeff.fmt else ""))
   }
@@ -122,7 +122,7 @@ pairPlot <- function(dat, xtag, ytag, gtag = "group") {
   
   ggplot(aes(x = x, y = y, col = g), data = dat) + 
     geom_point() + 
-    geom_smooth(aes(fill = g, alpha = sig, linetype = sig), method = "lm", col = "black") + 
+    geom_smooth(aes(fill = g, alpha = sig, linetype = sig), method = "rlm", col = "black") + 
     geom_text(aes(label = paste(r.fmt,", ",p.fmt,"\n",coeff.fmt, sep = ""), 
                   x = x.l, y = y.l),
               size = 3, col = "black", data = lmfitness) +
@@ -145,7 +145,7 @@ pairPlot(dat = datareadln(), xtag = "orgC", ytag = "Cd") +
   scale_fill_manual("Location", breaks = c("CL","EA","NV","WE"), 
                     values = c("#B45F04","#31B404","grey50","#013ADF")) +
   themeset -> p
-ggsave(filename = "pca/pair_Cd.png", plot = p, dpi = 600)
+ggsave(filename = "pca/pair_Cd.png", plot = p, dpi = 600, width = 6, height = 6)
 
 pairPlot(dat = datareadln(), xtag = "orgC", ytag = "S") +
   scale_x_continuous("organic carbon (mg/kg)") + 
@@ -155,9 +155,4 @@ pairPlot(dat = datareadln(), xtag = "orgC", ytag = "S") +
   scale_fill_manual("Location", breaks = c("CL","EA","NV","WE"), 
                     values = c("#B45F04","#31B404","grey50","#013ADF")) +
   themeset -> p 
-ggsave(filename = "pca/pair_S.png", plot = p, dpi = 600)
-
-
-
-
-  
+ggsave(filename = "pca/pair_S.png", plot = p, dpi = 600, width = 6, height = 6)
