@@ -5,6 +5,7 @@ library(grid)
 library(ggmap)
 library(dplyr)
 library(tidyr)
+library(maptools)
 rm(list=ls())
 
 ## ===========================data readln==================================
@@ -62,6 +63,7 @@ colnames(coo.sw4) <- cname
 coo.site <- read.csv("Data/map/sitecor.csv")
 coo.site$col <- as.character(coo.site$col)
 
+bkmap <- readShapePoly("data/bou2_4p.shp")
 
 ##================= mapping============================
 ##============================================================
@@ -212,3 +214,22 @@ ggplot()+
         panel.grid = element_blank(),
         legend.position = "bottom")  
 ggsave(filename = "map/base.png", dpi = 600, width = 12, height = 8)
+
+
+
+
+ggplot() + 
+  geom_polygon(aes(x = long, y = lat, group = group), 
+               colour = "black", fill = "grey90", data = fortify(bkmap)) + 
+  geom_point(aes(x = 121.25, y = 32.5), size = 4, color = "red") + 
+  geom_text(aes(x = 121.25, y = 32.5), nudge_x = 0.8, nudge_y = 0.7,
+            label = "Rudong", size = 5, angle = -45, color = "black") + 
+  coord_quickmap(xlim = c(110,130),ylim = c(25,40)) +
+  scale_x_continuous("",breaks = 0:4 * 5 + 110, 
+                     labels = paste(0:4 * 5 + 110,"°E", sep = "")) + 
+  scale_y_continuous("",breaks = 0:3 * 5 + 25, 
+                     labels = paste(0:3 * 5 + 25,"°N", sep = "")) + 
+  theme_bw() + 
+  theme(panel.grid = element_blank(),
+        strip.background = element_blank()) -> p
+ggsave(filename = "map/rudong.png",plot=p, height = 5, width = 6)
