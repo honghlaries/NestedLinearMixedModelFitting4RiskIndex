@@ -8,7 +8,7 @@ datareadln <- function() { ## data readln
   library(dplyr);library(tidyr)
   read.csv("Data/Result_Sediment.csv") %>%
     dplyr::inner_join(read.csv("Data/meta_SedimentSampleList.csv"), by = c("SplNo" = "SplNo")) %>%
-    dplyr::right_join(read.csv("Data/meta_Quadrat4pca.csv"), by = c("QudNo" = "QudNo")) %>%
+    dplyr::inner_join(read.csv("Data/meta_Quadrat4pca.csv"), by = c("QudNo" = "QudNo")) %>%
     dplyr::inner_join(read.csv("Data/meta_SiteGroup.csv"), by = c("SiteID" = "SiteID")) %>% 
     dplyr::select(N:Pb,SiteID,SplMonth,group)
 }

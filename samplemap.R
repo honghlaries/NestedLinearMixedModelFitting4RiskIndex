@@ -10,6 +10,17 @@ rm(list=ls())
 
 ## ===========================data readln==================================
 ##========================================================================
+conveySpCoord <- function(x) {
+  tmp <- strsplit(as.character(x),"°")
+  out <- NULL
+  for(i in 1:length(tmp)) {
+    out <- c(out,as.numeric(tmp[[i]][1]) + as.numeric(substr(tmp[[i]][2],1,nchar(tmp[[i]][2])-1))/60)
+  }
+  out
+}
+
+
+
 cname <- c("Longitude","Latitude")
 
 coo.land <- as.data.frame(
@@ -61,7 +72,9 @@ coo.sw4 <- as.data.frame(
 colnames(coo.sw4) <- cname
 
 coo.site <- read.csv("Data/map/sitecor.csv")
-coo.site$col <- as.character(coo.site$col)
+#coo.site$col <- as.character(coo.site$col)
+coo.site$Longitude <- conveySpCoord(as.character(coo.site$Longitude))
+coo.site$Latitude <- conveySpCoord(as.character(coo.site$Latitude))
 
 bkmap <- readShapePoly("data/bou2_4p.shp")
 
@@ -110,7 +123,7 @@ ggplot()+
   theme(axis.ticks = element_blank(),
         axis.line = element_blank(),
         axis.title = element_blank(),
-        axis.text = element_text(),
+        axis.text = element_blank(),
         panel.background = element_rect(fill = "#B9D3EE"),
         panel.grid = element_blank(),
         legend.position = "none") 
@@ -160,7 +173,7 @@ ggplot()+
   theme(axis.ticks = element_blank(),
         axis.line = element_blank(),
         axis.title = element_blank(),
-        axis.text = element_text(),
+        axis.text = element_blank(),
         panel.background = element_rect(fill = "#B9D3EE"),
         panel.grid = element_blank(),
         legend.position = "none") 
@@ -194,6 +207,14 @@ ggplot()+
                aes(x = Longitude, y = Latitude, fill = "#555555"))+
   geom_point(data = coo.site , 
              aes(x = Longitude, y = Latitude, col = col ,size = 2))+
+  geom_path(aes(x = c(121.23+0.01,121.23+0.01+5/(pi*6378.140*cos(32/180*pi))*180), 
+                y = c(32.36,32.36)), size = 1.7, color = "black")+
+  geom_text(aes(x = 121.23+0.01+2.5/(pi*6378.140*cos(32/180*pi))*180, y = 32.365), 
+            label = "5 km", size = 7, color = "black") + 
+  geom_text(aes(x = 121.43, y = 32.47), 
+            label = "N", size = 9, angle = 0, color = "black") + 
+  geom_path(aes(x = c(121.43,121.43), y = c(32.43,32.46)),size = 1.3, arrow = arrow(), color = "black") + 
+  geom_path(aes(x = c(121.42,121.44), y = c(32.445,32.445)),size = 1.3, color = "black") + 
   scale_x_continuous(breaks = 121.235 + 0:6 * 0.035, 
                      labels = paste("121°",(0.235 + 0:6 * 0.035) * 60 ,"'E",sep=""))+
   #geom_vline(xintercept = 121.235 + 0:6 * 0.035, alpha = 0.5) +
@@ -224,6 +245,18 @@ ggplot() +
   geom_point(aes(x = 121.25, y = 32.5), size = 4, color = "red") + 
   geom_text(aes(x = 121.25, y = 32.5), nudge_x = 0.8, nudge_y = 0.7,
             label = "Rudong", size = 5, angle = -45, color = "black") + 
+  geom_text(aes(x = 125, y = 35), 
+            label = "YELLOW SEA", size = 6, angle = -20, color = "black") + 
+  geom_text(aes(x = 125, y = 29), 
+            label = "EAST CHINA SEA", size = 6, angle = 47, color = "black") + 
+  geom_text(aes(x = 120.3, y = 39), 
+            label = "BOHAI SEA", size = 5, angle = 60, color = "black") + 
+  geom_text(aes(x = 115, y = 31), 
+            label = "CHINA", size = 17, angle = 20, color = "grey30") + 
+  geom_text(aes(x = 129, y = 40), 
+            label = "N", size = 9, angle = 0, color = "black") + 
+  geom_path(aes(x = c(129,129), y = c(35,39)),size = 1.3, arrow = arrow(), color = "black") + 
+  geom_path(aes(x = c(128,130), y = c(37,37)),size = 1.3, color = "black") + 
   coord_quickmap(xlim = c(110,130),ylim = c(25,40)) +
   scale_x_continuous("",breaks = 0:4 * 5 + 110, 
                      labels = paste(0:4 * 5 + 110,"°E", sep = "")) + 
@@ -231,5 +264,6 @@ ggplot() +
                      labels = paste(0:3 * 5 + 25,"°N", sep = "")) + 
   theme_bw() + 
   theme(panel.grid = element_blank(),
-        strip.background = element_blank()) -> p
-ggsave(filename = "map/rudong.png",plot=p, height = 5, width = 6)
+        strip.background = element_blank(),
+        panel.background = element_rect(fill = blues9[3]))
+ggsave(filename = "map/rudong.png",height = 5, width = 6)
