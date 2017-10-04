@@ -88,6 +88,13 @@ plotFEsim2 <- function (fe, modinf = NULL, level = 0.95, stat = "mean", sd = TRU
     fe[, "sd"] <- fe[, "sd"]/sigmaScale
     fe[, stat] <- fe[, stat]/sigmaScale
   }
+  
+  ############ code removed: begin ###################
+  #if (intercept == FALSE) {
+  #  data <- data[data$term != "(Intercept)", ]
+  #}
+  ############ code removed: end ###################
+  
   fe[, "sd"] <- fe[, "sd"] * qnorm(1 - ((1 - level)/2))
   fe[, "ymax"] <- fe[, stat] + fe[, "sd"]
   fe[, "ymin"] <- fe[, stat] - fe[, "sd"]
@@ -102,6 +109,7 @@ plotFEsim2 <- function (fe, modinf = NULL, level = 0.95, stat = "mean", sd = TRU
   fe$term <- as.character(fe$term)
   fe$term <- factor(fe$term, levels = fe[order(fe[, stat]), 1])
   
+  ############ code added: begin ###################
   gcol <- rep("black",length(levels(fe$term)))
   gsize <- rep(1,length(levels(fe$term)))
   gltp <- rep(2,length(levels(fe$term)))
@@ -113,17 +121,27 @@ plotFEsim2 <- function (fe, modinf = NULL, level = 0.95, stat = "mean", sd = TRU
   for (m in 1: length(llv)) {
     gltp[levels(fe$term) == llv[m]] <- 1
   }
+  ############ code added: end ###################
+  
   p <- ggplot(aes_string(x = xvar, y = stat, ymax = "ymax", ymin = "ymin"), data = fe) + 
     geom_hline(yintercept = hlineInt, color = I("red")) +
+    
+    ############ code added: begin ###################
     geom_point(aes(col = term, size = term)) + 
     labs(x = "Group", y = "Fixed Effect") + 
     scale_color_manual("Group", breaks = levels(fe$term), values = gcol) + 
     scale_size_manual("Group", breaks = levels(fe$term), values = gsize) + 
     coord_flip() + 
     theme
+    ############ code added: end ###################
+  
   if (sd) {
     p <- p + geom_errorbar(aes(linetype = term), width = 0.2) +
+      
+      ############ code added: begin ###################
       scale_linetype_manual("Group", breaks = levels(fe$term), values = gltp)
+      ############ code added: end ###################
+    
   }
   p
 }
@@ -135,6 +153,13 @@ plotFEsim2facet <- function (fe, modinf = NULL, level = 0.95, stat = "mean", sd 
     fe[, "sd"] <- fe[, "sd"]/sigmaScale
     fe[, stat] <- fe[, stat]/sigmaScale
   }
+  
+  ############ code removed: begin ###################
+  #if (intercept == FALSE) {
+  #  data <- data[data$term != "(Intercept)", ]
+  #}
+  ############ code removed: end ###################
+  
   fe[, "sd"] <- fe[, "sd"] * qnorm(1 - ((1 - level)/2))
   fe[, "ymax"] <- fe[, stat] + fe[, "sd"]
   fe[, "ymin"] <- fe[, stat] - fe[, "sd"]
@@ -146,6 +171,8 @@ plotFEsim2facet <- function (fe, modinf = NULL, level = 0.95, stat = "mean", sd 
     hlineInt <- 1
   }
   xvar <- "term"
+  
+  ############ code added: begin ###################
   fe$term <- factor(fe$term, levels = c("Jul","Nov",
                                         "WE","WE:Jul","WE:Nov",
                                         "EA","EA:Jul","EA:Nov",
@@ -169,8 +196,12 @@ plotFEsim2facet <- function (fe, modinf = NULL, level = 0.95, stat = "mean", sd 
   for (m in 1: length(llv)) {
     gltp[levels(fe$term) == llv[m]] <- 1
   }
+  ############ code added: end ###################
+  
   p <- ggplot(aes_string(x = xvar, y = stat, ymax = "ymax", ymin = "ymin"), data = fe) + 
     geom_hline(yintercept = hlineInt, color = I("red")) +
+    
+    ############ code added: begin ###################
     geom_point(aes(col = term, size = term)) + 
     labs(x = "Group", y = "Fixed Effect") + 
     scale_color_manual("Group", breaks = levels(fe$term), values = gcol) + 
@@ -178,13 +209,23 @@ plotFEsim2facet <- function (fe, modinf = NULL, level = 0.95, stat = "mean", sd 
     facet_wrap(~ tag, ncol = ncol, scales = "free") +
     # coord_flip() + 
     theme
+    ############ code added: end ###################
+  
   if (sd) {
     p <- p + geom_errorbar(aes(alpha = term), width = 0.2) +
+      
+      ############ code added: begin ###################
       scale_alpha_manual("Group", breaks = levels(fe$term), values = gltp)
+     ############ code added: end ###################
+    
   }
+  
+  ############ code added: begin ###################
   if(!missing(modinf)) {
     p <- p + geom_text(x = 2, y = 5, label = "abc")
   }
+  ############ code added: end ###################
+  
   p
 }
 
