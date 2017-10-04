@@ -18,9 +18,9 @@ pcaLoadingCal <- function(dat, grouped = T, log = T) { ## cal and log the pca lo
   dat1 <- dat %>%
     filter(!is.na(N))%>%
     select_("N:Pb")
-  png(paste("pca/plot/screenPlot_","all",".png",sep = ""))
+  png(paste("pca/plot/screePlot_","all",".png",sep = ""))
   fa.parallel(dat1,fa="pc", n.iter=10, show.legend=T,
-              main = paste("Screen plot with parallel analysis\n, group =","all"))
+              main = paste("Scree plot with parallel analysis\n, group =","all"))
   dev.off()
   pca <- principal(dat1, nfactors=2, scores = T, rotate="varimax")
   tag <- dimnames(pca$loadings)[[1]]
@@ -34,9 +34,9 @@ pcaLoadingCal <- function(dat, grouped = T, log = T) { ## cal and log the pca lo
         filter(group == grouptag[i]) %>%
         filter(!is.na(N))%>% 
         select_("N:Pb")
-      png(paste("pca/plot/screenPlot_",grouptag[i],".png",sep = ""))
+      png(paste("pca/plot/screePlot_",grouptag[i],".png",sep = ""))
       fa.parallel(dat1,fa="pc", n.iter=10, show.legend=T,
-                  main = paste("Screen plot with parallel analysis\n, group =",grouptag[i]))
+                  main = paste("Scree plot with parallel analysis\n, group =",grouptag[i]))
       dev.off()
       pca <- principal(dat1, nfactors=2, scores = T, rotate="varimax")
       tag <- dimnames(pca$loadings)[[1]]
