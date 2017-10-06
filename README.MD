@@ -1,5 +1,5 @@
 # Brief Introduction
-These codes were provided as examples for manuscript entitled "Risk assessment for Artificial Topography on Element Heterogeneity: case study at Jiangsu, China"
+These codes were provided as scripts for manuscript entitled "Risk assessment for Artificial Topography on Element Heterogeneity: case study at Jiangsu, China"
 
 
 # Package Dependencies
@@ -9,7 +9,7 @@ The following R packages are required:
 
 All of these packages are available on CRAN.
 
-I have regrouped some codes in the *merTools* package to fitting the linear mixed models in parallel. Now the model selection (based on AIC), LMM fitting and ploting (fixed effects and random effects) can be finished automatically and some log files are generated for review. 
+I have regrouped some codes in the [*merTools*](https://github.com/jknowles/merTools/) package to fitting the linear mixed models in parallel. Now the model selection (based on AIC), LMM fitting and ploting (fixed effects and random effects) can be finished automatically and some log files are generated for further analysis. 
 
 # Summary of the scripts
 ## Igeo.R (for geo-accumulation index) and EF.R (for enrichment factor)
@@ -31,7 +31,7 @@ Compare different models based on AIC, output the best model in the model list. 
 Regrouped from *merTools* package. Add new features to emphasis the targeted factors. Changes made from *merTools* packages could be found in the source fils.
 
 ### plotFEsim2facet()
-Similar to the plotFEsim2() but output a grouped faceted plot. Supproting by the facet_wrap() commend of *ggplot2* package. Changes made from *merTools* packages could be found in the source fils.
+Similar to the plotFEsim2() but output a associated plot with facets. Supproted by the facet_wrap() commend of *ggplot2* package. Changes made from origianl functions in *merTools* packages could be found in the source fils.
 
 ### multiElementMod()
 This is the main function of these two script files. It finishes tasks as fellow: 
@@ -44,7 +44,7 @@ This is the main function of these two script files. It finishes tasks as fellow
 6. Output the log files, including Shapiro Test results, Model choices, Fixed effects, Random effects, ANOVA results, and Tukey Test results.
 
 ### denPlot()
-Prepare a density plot for selected target.
+Prepare a density plot for selected targets.
 
 ## Pca.R
 Calculate and output the PCA result, with selected factors emphasized by a different color (red as default). 
